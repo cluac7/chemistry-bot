@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include <iostream>
+#include <chrono>
 
 const std::string BOT_TOKEN = std::getenv("BOT_TOKEN");
 
@@ -51,8 +53,10 @@ std::vector<std::vector<std::string>> get_tasks_due_tmrw() {
         std::istringstream ss(task.first);
         ss >> std::get_time(&task_tm, "%Y-%m-%dT%H:%M:%S");
 
-        if (std::mktime(&task_tm) == std::mktime(local_time_tmrw)) {
-            tasks_due_tmrw.push_back(task.second);
+        if (task_tm.tm_year == local_time_tmrw->tm_year && 
+            task_tm.tm_mon == local_time_tmrw->tm_mon && 
+            task_tm.tm_mday == local_time_tmrw->tm_mday) {
+                tasks_due_tmrw.push_back(task.second);
         }
     }
 
@@ -64,16 +68,19 @@ std::vector<std::vector<std::string>> get_tasks_due_tmrw() {
 int main() {
     dpp::cluster bot(BOT_TOKEN);
 
-    bot.on_slashcommand([](const dpp::slashcommand_t& event) {
+    bot.on_log(dpp::utility::cout_logger());
+
+    bot.on_slashcommand([&bot](const dpp::slashcommand_t& event) {
 
         if (event.command.get_command_name() == "addtask") {
             std::string date = std::get<std::string>(event.get_parameter("date"));
             std::string name = std::get<std::string>(event.get_parameter("name"));
-            std::string note = std::get<std::string>(event.get_parameter("note"));
+            std::string link = "";
+            try {link = std::get<std::string>(event.get_parameter("link"));}
+            catch (const std::bad_variant_access& ex){}
+            tasks.insert({date, {name, link}});
 
-            tasks.insert({date, {name, note}});
-
-            event.reply("Added a task {" + name + "}! I'll remind a day before it's due.");
+            event.reply("Added a task " + name + "! I'll remind a day before it's due.");
         }
     });
 
@@ -81,7 +88,7 @@ int main() {
         if (dpp::run_once<struct register_bot_commands>()) {
 
             dpp::slashcommand add_task("addtask", "Add a new task reminder", bot.me.id);
-            add_task.add_option(dpp::command_option(dpp::co_string, "name", "Name of the task (e.g. learnable: 3.3 Rates of Reaction)", true));
+            add_task.add_option(dpp::command_option(dpp::co_string, "name", "Name of the task (e.g. learnable: 3.2 Rates of Reaction)", true));
             add_task.add_option(dpp::command_option(dpp::co_string, "date", 
                         "Due date in ISO8601 (2024-06-04T23:59:00 is 11:59pm on 4th June 2024)", true));
             add_task.add_option(dpp::command_option(dpp::co_string, "link", "The link to the task (optional)", false));
@@ -90,16 +97,20 @@ int main() {
         }
     });
 
-    bot.start(dpp::st_wait);
+    bot.start(true);
 
     while (true) {
         auto tasks_due_tmrw = get_tasks_due_tmrw();
         std::string message = "Tasks due tomorrow:\n";
         for (auto& task : tasks_due_tmrw) {
-            message += " - " + task[0] + task[1] != "" ? ", find it at " + task[1] + "\n" :+ "\n";
-            bot.message_create(dpp::message(message));
+            message += "- " + task[0];
+            if (task[1].size() > 1) {
+                message += ", find it at [link](" + task[1] + ")";
+            }
+            message += "\n";
         }
-        std::this_thread::sleep_for(std::chrono::minutes(24));
+        bot.message_create(dpp::message(1046344589721735229, message));
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
 
