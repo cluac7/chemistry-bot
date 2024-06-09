@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <ctime>
-#include <iostream>
 #include <chrono>
 
 const std::string BOT_TOKEN = std::getenv("BOT_TOKEN");
@@ -52,7 +51,6 @@ std::vector<std::vector<std::string>> get_tasks_due_tmrw() {
         std::tm task_tm;
         std::istringstream ss(task.first);
         ss >> std::get_time(&task_tm, "%Y-%m-%dT%H:%M:%S");
-        std::cout << task.second[1] << std::endl;
 
         if (task_tm.tm_year == local_time_tmrw->tm_year && 
             task_tm.tm_mon == local_time_tmrw->tm_mon && 
@@ -81,7 +79,7 @@ int main() {
             catch (const std::bad_variant_access& ex){}
             tasks.insert({date, {name, link}});
 
-            event.reply("Added a task " + name + "! I'll remind a day before it's due.");
+            event.reply("Added task \"" + name + "\"! I'll remind everyone a day before it's due.");
         }
     });
 
@@ -89,7 +87,7 @@ int main() {
         if (dpp::run_once<struct register_bot_commands>()) {
 
             dpp::slashcommand add_task("addtask", "Add a new task reminder", bot.me.id);
-            add_task.add_option(dpp::command_option(dpp::co_string, "name", "Name of the task (e.g. learnable: 3.2 Rates of Reaction)", true));
+            add_task.add_option(dpp::command_option(dpp::co_string, "name", "Name of the task (e.g. learnable: 3.3 Rates of Reaction)", true));
             add_task.add_option(dpp::command_option(dpp::co_string, "date", 
                         "Due date in ISO8601 (2024-06-04T23:59:00 is 11:59pm on 4th June 2024)", true));
             add_task.add_option(dpp::command_option(dpp::co_string, "link", "The link to the task (optional)", false));
@@ -110,8 +108,8 @@ int main() {
             }
             message += "\n";
         }
-        bot.message_create(dpp::message(1046344589721735229, message));
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        bot.message_create(dpp::message(1055140777421971480, message));
+        std::this_thread::sleep_for(std::chrono::hours(24));
     }
 }
 
