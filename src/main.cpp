@@ -52,6 +52,7 @@ std::vector<std::vector<std::string>> get_tasks_due_tmrw() {
         std::tm task_tm;
         std::istringstream ss(task.first);
         ss >> std::get_time(&task_tm, "%Y-%m-%dT%H:%M:%S");
+        std::cout << task.second[1] << std::endl;
 
         if (task_tm.tm_year == local_time_tmrw->tm_year && 
             task_tm.tm_mon == local_time_tmrw->tm_mon && 
