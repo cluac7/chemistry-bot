@@ -50,7 +50,7 @@ std::vector<std::vector<std::string>> get_tasks_due_tmrw() {
     for (auto& task : tasks) {
         std::tm task_tm;
         std::istringstream ss(task.first);
-        ss >> std::get_time(&task_tm, "%Y-%m-%dT%H:%M:%S");
+        ss >> std::get_time(&task_tm, "%Y-%m-%d");
 
         if (task_tm.tm_year == local_time_tmrw->tm_year && 
             task_tm.tm_mon == local_time_tmrw->tm_mon && 
@@ -89,7 +89,7 @@ int main() {
             dpp::slashcommand add_task("addtask", "Add a new task reminder", bot.me.id);
             add_task.add_option(dpp::command_option(dpp::co_string, "name", "Name of the task (e.g. learnable: 3.3 Rates of Reaction)", true));
             add_task.add_option(dpp::command_option(dpp::co_string, "date", 
-                        "Due date in ISO8601 (2024-06-04T23:59:00 is 11:59pm on 4th June 2024)", true));
+                        "Due date in ISO8601 (2024-06-04 is the 4th June 2024)", true));
             add_task.add_option(dpp::command_option(dpp::co_string, "link", "The link to the task (optional)", false));
 
             bot.global_command_create(add_task);
